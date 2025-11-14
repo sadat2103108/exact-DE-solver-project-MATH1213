@@ -3,109 +3,97 @@ import re
 
 class ExactDE:
     def __init__(self, equation):
-        self.__eqn = equation  #private
-        self.__M, self.__N= self.__extractMN() #private
-        self.__dMdy, self.__dNdx = self.__checkExactness(self.__M,self.__N); 
-        self.exact = (self.__dMdy == self.__dNdx)#public: rturns boolean value of exactness
-        self.sol = None  #public : returns a string of solution
-        if(self.exact) : self.sol = self.findSol()
-        else: self.sol = "The equation is Not exact."
+        self.__eqn = equation  # private
+        self.__M, self.__N = self.__extractMN()  # private
+        self.__dMdy, self.__dNdx = self.__checkExactness(self.__M, self.__N)
+        self.__exact = (self.__dMdy == self.__dNdx)
+        self.__solution = self.__findSol() if self.__exact else "The equation is not exact."
 
 
-    def getInfo(self):
-        # return self.__eqn
-        print("Equation is:",self.__eqn);
-        print("dM/dy=", self.__dMdy)
-        print("dN/dx=", self.__dNdx)
-        print("Exact? =", self.exact)
-
-
-    def __extractMN(self):
-        i =0;
-        s= self.__eqn
-        n = len(s)
-        M = ""
-        while(i<n):
-            if s[i]+s[i+1] == "dx" : break
-            M += s[i]
-            i+=1
-        i+=2
-        N=""
-        while(i<n):
-            if s[i]+s[i+1] =='dy' : break
-            N += s[i]
-            i+=1
-
-        
-        _M = self.encode(M)
-        _N = self.encode(N)
-        return sympify(_M), sympify(_N)
-
-
-    def __checkExactness(self, M , N):
-        '''
-        IN THIS STEP, dM/dy and dN/dx is calculated
-        to check exactness
-        '''
-        x , y = symbols("x y")
-        dMdy = diff(M,y)
-        dNdx = diff(N,x)
-        exact = (dMdy == dNdx)
-        return dMdy, dNdx;
-
-    
-    def findSol(self):
-        x,y = symbols("x y")
-        M = self.__M ; N = self.__N
-
-        F = integrate(M,x, conds='separate')
-
-        dFdy = diff(F,y)
-
-        dG = N - dFdy
-        G = integrate(dG, y, conds='separate')
-
-        ans = F + G
-    
-
-        return self.decode(ans)+"= Constant";
-
-
-
-    def encode(self, eqn):
-        eqn = eqn.replace("xy", "x*y")
-        eqn = eqn.replace("yx", "y*x")
+    # ----------------- Private Methods -----------------
+    def __encode(self, eqn):
+        eqn = eqn.replace("xy", "x*y").replace("yx", "y*x")
         eqn = re.sub(r'(\d+)([a-zA-Z(])', r'\1*\2', eqn)
 
-        # Handle functions explicitly
-        all_functions = ['sin', 'cos', 'tan', 'exp', 'sec', 'csc', 'cot', 'asin', 'acos', 'atan', 'asec', 'acsc', 'acot']
-        for func in all_functions:
+        # Handle common functions
+        all_funcs = ['sin','cos','tan','exp','sec','csc','cot',
+                     'asin','acos','atan','asec','acsc','acot']
+        for func in all_funcs:
             eqn = eqn.replace(f"{func}(x)", f"{func}(x)")
-
-        # Correct handling for tan(y) and 1+y^2
-        eqn = re.sub(r'tan\(([^)]+)\)', r'tan(\1)', eqn)
+            eqn = re.sub(r'([a-zA-Z)])(' + '|'.join(all_funcs) + r')\(', r'\1(\2', eqn)
         eqn = re.sub(r'1\+y\*\*2', r'1+y**2', eqn)
-
-        eqn = re.sub(r'([a-zA-Z)])(' + '|'.join(all_functions) + r')\(', r'\1(\2)', eqn)
-
         return eqn
 
+    def __decode(self, expr):
+        s = str(expr)
+        s = re.sub(r'x\*\*([\d.]+)', r'x^{\1}', s)
+        s = re.sub(r'\*\*', r'^', s)
+        return s.replace("*", "")
 
+    def __extractMN(self):
+        s = self.__eqn
+        i = 0
+        n = len(s)
+        M, N = "", ""
 
-    def decode(self, eqn):
-        eqn_str = str(eqn)
-
-        eqn_str = re.sub(r'x\*\*([\d.]+)', r'x^{\1}', eqn_str)
-        eqn_str = re.sub(r'\*\*', r'^', eqn_str)
+        # Extract M
+        while i < n-1:
+            if s[i]+s[i+1] == "dx":
+                i += 2
+                break
+            M += s[i]
+            i += 1
         
-        return eqn_str.replace("*", "")
+        # Extract N
+        while i < n-1:
+            if s[i]+s[i+1] == "dy":
+                break
+            N += s[i]
+            i += 1
+
+        return sympify(self.__encode(M)), sympify(self.__encode(N))
+
+    def __checkExactness(self, M, N):
+        x, y = symbols("x y")
+        dMdy = diff(M, y)
+        dNdx = diff(N, x)
+        return dMdy, dNdx
+
+    def __findSol(self):
+        x, y = symbols("x y")
+        F = integrate(self.__M, x, conds='separate')
+        dFdy = diff(F, y)
+        G = integrate(self.__N - dFdy, y, conds='separate')
+        ans = F + G
+        return self.__decode(ans) + " = Constant"
+
+    # ----------------- Public Getter Methods -----------------
+    def getInfo(self):
+        info = {
+            "Equation": self.__eqn,
+            "dM/dy": self.__dMdy,
+            "dN/dx": self.__dNdx,
+            "Exact?": self.__exact
+        }
+        return info
+
+    def isExact(self):
+        return self.__exact
+
+    def getSolution(self):
+        return self.__solution
 
 
 
-'''EXAMPLE USE:'''
 
-eqn = input("Enter Differential Equation: ")
-de = ExactDE(eqn)
-print("Solution: "+de.sol)
+# ----------------- Example Use -----------------
+if __name__ == "__main__":
+    eqn = input("Enter Differential Equation: ")
+    de = ExactDE(eqn)
 
-
+    print("\nEquation Info:")
+    for k, v in de.getInfo().items():
+        print(f"{k}: {v}")
+    
+    print("\nIs Exact?", de.isExact())
+    print("Solution:", de.getSolution())
