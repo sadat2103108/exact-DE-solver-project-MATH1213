@@ -6,9 +6,10 @@ USER MANUAL:
 ExactDE is A Python class for solving and analyzing ordinary differential equations (ODEs).
 
     Usage:
-    >>> de_equation = ExactDE("2*x*y + x**2*y' = 0")
-    >>> solution = de_solver.sol
-    >>> is_exact = de_solver.exact
+    >>> parse DE => ExactDE("2*x*y + x**2*y' = 0")
+    >>> check if exact => de.exact
+    >>> get solution => de.sol
+    
 
     Attributes:
         sol (str): Returns the solution of the provided differential equation in string form.
@@ -25,6 +26,7 @@ ExactDE is A Python class for solving and analyzing ordinary differential equati
     
     #to see the solution, the 'sol' attribute is called
     >>> print(de.sol)
+
 
 
 '''
