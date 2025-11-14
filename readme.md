@@ -1,32 +1,45 @@
-
 '''
 
 USER MANUAL:
 
-ExactDE is A Python class for solving and analyzing ordinary differential equations (ODEs).
+ExactDE is a Python class for solving and analyzing ordinary differential equations (ODEs).
 
-    Usage:
-    >>> parse DE => ExactDE("2*x*y + x**2*y' = 0")
-    >>> check if exact => de.exact
-    >>> get solution => de.sol
-    
+Usage:
+    >>> de = ExactDE("2*x*y + x**2 + 4*y dy + 2*x*y + 3 dx")
+    >>> de.getInfo()        # Get detailed info about the equation
+    >>> de.isExact()        # Check if the differential equation is exact
+    >>> de.getSolution()    # Get the solution of the exact differential equation
 
-    Attributes:
-        sol (str): Returns the solution of the provided differential equation in string form.
-        exact (bool): Returns True if the differential equation is exact, False otherwise.
+Public Methods:
 
+    getInfo() -> dict
+        Returns a dictionary containing:
+            "Equation" : The original differential equation string
+            "dM/dy"    : Partial derivative of M with respect to y
+            "dN/dx"    : Partial derivative of N with respect to x
+            "Exact?"   : Boolean indicating if the equation is exact
 
-    Example:
-    #the class takes a string as parameter, it can be input by the user, 
-    >>> equation = input()    
+    isExact() -> bool
+        Returns True if the differential equation is exact, False otherwise.
+
+    getSolution() -> str
+        Returns the solution as a string if the equation is exact,
+        or a message "The equation is not exact." otherwise.
+
+Example:
+
+    >>> equation = input("Enter Differential Equation: ")
     >>> de = ExactDE(equation)
 
-    #to see whether the equation is exact or not the 'exact' attribute can be called
-    >>> print(de.exact)
-    
-    #to see the solution, the 'sol' attribute is called
-    >>> print(de.sol)
+    # Get information about the equation
+    >>> info = de.getInfo()
+    >>> for k, v in info.items():
+    >>>     print(f"{k}: {v}")
 
+    # Check exactness
+    >>> print("Is Exact?", de.isExact())
 
+    # Get solution
+    >>> print("Solution:", de.getSolution())
 
 '''
